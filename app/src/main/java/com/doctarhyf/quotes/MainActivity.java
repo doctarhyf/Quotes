@@ -9,15 +9,20 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,8 +38,8 @@ public class MainActivity extends AppCompatActivity {
 
     TextView tvQuote;
 
-    private DocumentReference mDocRef =
-            FirebaseFirestore.getInstance().document("sampleData/inspiration");
+    //private DocumentReference mDocRef = FirebaseFirestore.getInstance().document("sampleData/inspiration");
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
 
     @Override
@@ -53,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        mDocRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+        /*mDocRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
                 if(documentSnapshot.exists()){
@@ -64,7 +69,22 @@ public class MainActivity extends AppCompatActivity {
                     Log.w(TAG, "onEvent: exception", e);
                 }
             }
-        });
+        });*/
+
+        /*db.collection("quotes").document()
+
+                .addOnSuccessListener(this, new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Toast.makeText(MainActivity.this, "Document added!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(MainActivity.this, "Failed adding doc!", Toast.LENGTH_SHORT).show();
+                    }
+                });*/
     }
 
     public void saveQuote(View view) {
@@ -79,7 +99,23 @@ public class MainActivity extends AppCompatActivity {
         Map<String, Object> dataToSave = new HashMap<>();
         dataToSave.put(QUOTE_KEY, quoteText);
         dataToSave.put(AUTHOR_KEY, authorText);
-        
+
+
+        db.collection("quotes")
+                .add(dataToSave)
+                .addOnSuccessListener(this, new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Toast.makeText(MainActivity.this, "Document added!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(MainActivity.this, "Failed adding doc!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+        /*
         mDocRef.set(dataToSave).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
@@ -90,13 +126,13 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(@NonNull Exception e) {
                 Log.e(TAG, "Document was not saved " );
             }
-        });
+        });*/
 
     }
 
     public void fetchQuote(View view) {
 
-        mDocRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        /*mDocRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 if(documentSnapshot.exists()){
@@ -105,6 +141,23 @@ public class MainActivity extends AppCompatActivity {
                     tvQuote.setText("\"" + quoteText + "\" -- " + authorText);
                 }
             }
-        });
+        });*/
+
+        db.collection("quotes")
+                .get()
+
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.e(TAG, document.getId() + " => " + document.getData());
+                            }
+                        } else {
+                            Log.e(TAG, "Error getting documents." + task.getException());
+                        }
+                    }
+                });
+
     }
 }
