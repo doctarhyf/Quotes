@@ -26,6 +26,7 @@
         app:layout_constraintTop_toBottomOf="@+id/etQuote" />
 
     <Button
+        android:onClick="saveQuote"
         android:id="@+id/btnSaveQuote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -34,10 +35,11 @@
         app:layout_constraintTop_toBottomOf="@+id/etAuthor" />
 
     <Button
-        android:id="@+id/btnReadQuote"
+        android:onClick="fetchQuote"
+        android:id="@+id/btnFetchQuote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="READ QUOTE"
+        android:text="FETCH QUOTE"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etAuthor" />
 
