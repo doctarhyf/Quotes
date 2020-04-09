@@ -3,18 +3,26 @@ package com.doctarhyf.quotes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -41,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     //private DocumentReference mDocRef = FirebaseFirestore.getInstance().document("sampleData/inspiration");
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,10 +58,46 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+        if (acct != null) {
+            String personName = acct.getDisplayName();
+            String personGivenName = acct.getGivenName();
+            String personFamilyName = acct.getFamilyName();
+            String personEmail = acct.getEmail();
+            String personId = acct.getId();
+            Uri personPhoto = acct.getPhotoUrl();
+
+
+            Log.e(TAG, "updateUI: url : " + personPhoto.toString() );
+
+            ImageView iv = findViewById(R.id.iv);
+
+            Glide.with(this)
+                    .load(personPhoto)
+                    .into(iv);
+
+        }else{
+            startActivity(new Intent(this, ActivityLogin.class));
+        }
+
+
 
         btnFetchQuote = findViewById(R.id.btnFetchQuote);
         btnSaveQuote = findViewById(R.id.btnSaveQuote);
         tvQuote = findViewById(R.id.tvQuote);
+
+        db.collection("quotes").document("quote").addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                if(documentSnapshot.exists()){
+                    Map<String, Object> data = documentSnapshot.getData();
+
+                    tvQuote.setText(data.get(QUOTE_KEY) + " -- " + data.get(AUTHOR_KEY));
+
+                    Log.e(TAG, "onSuccess: quote fetching successful" );
+                }
+            }
+        });
 
     }
 
@@ -85,6 +131,19 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Failed adding doc!", Toast.LENGTH_SHORT).show();
                     }
                 });*/
+
+        db.collection("quotes").document("quote").addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                if(documentSnapshot.exists()){
+                    Map<String, Object> data = documentSnapshot.getData();
+
+                    tvQuote.setText(data.get(QUOTE_KEY) + " -- " + data.get(AUTHOR_KEY));
+
+                    Log.e(TAG, "onSuccess: quote fetching successful" );
+                }
+            }
+        });
     }
 
     public void saveQuote(View view) {
@@ -101,6 +160,21 @@ public class MainActivity extends AppCompatActivity {
         dataToSave.put(AUTHOR_KEY, authorText);
 
 
+        db.collection("quotes").document("quote")
+                .set(dataToSave)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.e(TAG, "onSuccess: doc added" );
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "onFailure: doc adding failed" );
+                    }
+                });
+        /*
         db.collection("quotes")
                 .add(dataToSave)
                 .addOnSuccessListener(this, new OnSuccessListener<DocumentReference>() {
@@ -114,48 +188,30 @@ public class MainActivity extends AppCompatActivity {
                     public void onFailure(@NonNull Exception e) {
                         Toast.makeText(MainActivity.this, "Failed adding doc!", Toast.LENGTH_SHORT).show();
                     }
-                });
-        /*
-        mDocRef.set(dataToSave).addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                Log.e(TAG, "Document has been saved " );
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.e(TAG, "Document was not saved " );
-            }
-        });*/
+                });*/
 
     }
 
     public void fetchQuote(View view) {
 
-        /*mDocRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                if(documentSnapshot.exists()){
-                    String quoteText = documentSnapshot.getString(QUOTE_KEY);
-                    String authorText = documentSnapshot.getString(AUTHOR_KEY);
-                    tvQuote.setText("\"" + quoteText + "\" -- " + authorText);
-                }
-            }
-        });*/
 
-        db.collection("quotes")
+
+        db.collection("quotes").document("quote")
                 .get()
-
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.e(TAG, document.getId() + " => " + document.getData());
-                            }
-                        } else {
-                            Log.e(TAG, "Error getting documents." + task.getException());
-                        }
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        Map<String, Object> data = documentSnapshot.getData();
+
+                        tvQuote.setText(data.get(QUOTE_KEY) + " -- " + data.get(AUTHOR_KEY));
+
+                        Log.e(TAG, "onSuccess: quote fetching successful" );
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "onFailure: quote fetching failed " );
                     }
                 });
 

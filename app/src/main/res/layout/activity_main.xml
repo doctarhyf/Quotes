@@ -7,6 +7,16 @@
     android:padding="12dp"
     tools:context=".MainActivity">
 
+
+    <ImageView
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:id="@+id/iv"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"/>
+
     <EditText
         android:id="@+id/etQuote"
         android:layout_width="match_parent"
@@ -14,7 +24,7 @@
         android:hint="Quote"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/iv" />
 
     <EditText
         android:id="@+id/etAuthor"
