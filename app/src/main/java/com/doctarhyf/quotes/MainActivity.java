@@ -25,6 +25,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     FirebaseUser firebaseUser;// = FirebaseAuth.getInstance().getCurrentUser();
     private FirebaseAuth mAuth;
     private GoogleSignInClient mGoogleSignInClient;
+    private String POSTED_BY_KEY = "postedBy";
 
 
     @Override
@@ -195,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
         Map<String, Object> dataToSave = new HashMap<>();
         dataToSave.put(QUOTE_KEY, quoteText);
         dataToSave.put(AUTHOR_KEY, authorText);
+        dataToSave.put(POSTED_BY_KEY, mAuth.getCurrentUser().getDisplayName());
 
 
         db.collection("quotes").document("quote")
@@ -238,11 +241,17 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        Map<String, Object> data = documentSnapshot.getData();
 
-                        tvQuote.setText(data.get(QUOTE_KEY) + " -- " + data.get(AUTHOR_KEY));
 
-                        Log.e(TAG, "onSuccess: quote fetching successful" );
+                        if(documentSnapshot.exists()) {
+                            Map<String, Object> data = documentSnapshot.getData();
+
+                            tvQuote.setText(data.get(QUOTE_KEY) + " -- " + data.get(AUTHOR_KEY) + "\nBy " + data.get(POSTED_BY_KEY));
+
+                            Log.e(TAG, "onSuccess: quote fetching successful");
+                        }else{
+                            Snackbar.make(findViewById(R.id.rootView), "No quotes available", Snackbar.LENGTH_LONG).show();
+                        }
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
