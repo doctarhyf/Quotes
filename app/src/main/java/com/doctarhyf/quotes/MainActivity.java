@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.gms.auth.api.identity.SignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -64,6 +65,30 @@ public class MainActivity extends AppCompatActivity {
 
 
         mAuth = FirebaseAuth.getInstance();
+
+        firebaseUser = mAuth.getCurrentUser();
+
+        if(firebaseUser != null){
+
+            TextView tvUsername = findViewById(R.id.tvUsername);
+            TextView tvEmail = findViewById(R.id.tvEmail);
+
+
+            tvUsername.setText(firebaseUser.getDisplayName() + "\n");
+            tvEmail.setText(firebaseUser.getEmail() + "\n");
+
+            ImageView iv = (ImageView) findViewById(R.id.iv);
+
+            Glide.with(this)
+                    .load(firebaseUser.getPhotoUrl())
+                    .apply(RequestOptions.circleCropTransform())
+                    .into(iv);
+
+        }else{
+            startActivity(new Intent(this, ActivityLogin.class));
+        }
+
+
 
         /*
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
