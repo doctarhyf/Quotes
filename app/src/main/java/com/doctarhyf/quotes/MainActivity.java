@@ -15,8 +15,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.auth.api.identity.SignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -49,7 +52,9 @@ public class MainActivity extends AppCompatActivity {
     //private DocumentReference mDocRef = FirebaseFirestore.getInstance().document("sampleData/inspiration");
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+    FirebaseUser firebaseUser;// = FirebaseAuth.getInstance().getCurrentUser();
+    private FirebaseAuth mAuth;
+    private GoogleSignInClient mGoogleSignInClient;
 
 
     @Override
@@ -58,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        mAuth = FirebaseAuth.getInstance();
+
+        /*
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
         if (acct != null) {
             String personName = acct.getDisplayName();
@@ -78,8 +86,12 @@ public class MainActivity extends AppCompatActivity {
 
         }else{
             startActivity(new Intent(this, ActivityLogin.class));
-        }
-
+        }*/
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
 
         btnFetchQuote = findViewById(R.id.btnFetchQuote);
@@ -215,5 +227,20 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+    }
+
+    public void logout(View view) {
+        // Firebase sign out
+        mAuth.signOut();
+
+
+        // Google sign out
+        mGoogleSignInClient.signOut().addOnCompleteListener(this,
+                new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        startActivity(new Intent(MainActivity.this, ActivityLogin.class));
+                    }
+                });
     }
 }
